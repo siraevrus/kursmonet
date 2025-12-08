@@ -72,48 +72,78 @@ class MainScreen extends ConsumerWidget {
                       ],
                     ),
                   )
-                : ReorderableListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: state.selectedCurrencies.length,
-                    onReorder: (oldIndex, newIndex) {
-                      ref.read(currencyProvider.notifier).reorderCurrencies(oldIndex, newIndex);
-                    },
-                    itemBuilder: (context, index) {
-                      final currencyCode = state.selectedCurrencies[index];
-                      final isBase = currencyCode == state.baseCurrency;
+                : Column(
+                    children: [
+                      // Время обновления над первой карточкой
+                      if (state.lastUpdated != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.update,
+                                size: 14,
+                                color: AppTheme.textSecondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Обновлено: ${_formatLastUpdated(state.lastUpdated!)}',
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      // Список валют
+                      Expanded(
+                        child: ReorderableListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: state.selectedCurrencies.length,
+                          onReorder: (oldIndex, newIndex) {
+                            ref.read(currencyProvider.notifier).reorderCurrencies(oldIndex, newIndex);
+                          },
+                          itemBuilder: (context, index) {
+                            final currencyCode = state.selectedCurrencies[index];
+                            final isBase = currencyCode == state.baseCurrency;
 
-                      return Dismissible(
-                        key: Key(currencyCode),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          padding: const EdgeInsets.only(right: 20),
-                          decoration: BoxDecoration(
-                            color: AppTheme.deleteButton,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.centerRight,
-                          child: const Icon(
-                            Icons.delete,
-                            color: AppTheme.textPrimary,
-                          ),
+                            return Dismissible(
+                              key: Key(currencyCode),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.only(right: 20),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.deleteButton,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                alignment: Alignment.centerRight,
+                                child: const Icon(
+                                  Icons.delete,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              onDismissed: (direction) {
+                                ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('$currencyCode удалена'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              child: CurrencyCard(
+                                key: Key(currencyCode),
+                                currencyCode: currencyCode,
+                                isBaseCurrency: isBase,
+                              ),
+                            );
+                          },
                         ),
-                        onDismissed: (direction) {
-                          ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('$currencyCode удалена'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        child: CurrencyCard(
-                          key: Key(currencyCode),
-                          currencyCode: currencyCode,
-                          isBaseCurrency: isBase,
-                        ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
           ),
           // Кнопка добавления всегда внизу
