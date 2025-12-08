@@ -1,0 +1,41 @@
+name: currency_pro
+description: Мультивалютный конвертер с автоматическим пересчетом в реальном времени
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # Локальное хранилище
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # HTTP запросы
+  http: ^1.1.0
+  
+  # Кэширование изображений
+  cached_network_image: ^3.3.0
+  
+  # Intl для форматирования
+  intl: ^0.18.1
+  
+  # Иконки
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+
