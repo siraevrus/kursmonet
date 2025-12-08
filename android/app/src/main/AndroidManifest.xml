@@ -4,7 +4,7 @@
     <application
         android:label="CurrencyPro"
         android:name="${applicationName}"
-        android:icon="@android:drawable/ic_menu_myplaces">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

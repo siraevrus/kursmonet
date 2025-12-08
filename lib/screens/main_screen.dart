@@ -14,7 +14,18 @@ class MainScreen extends ConsumerWidget {
     final state = ref.watch(currencyProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/earth.png'),
+            fit: BoxFit.cover,
+            opacity: 0.15,
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
         title: const Text('CurrencyPro'),
         actions: [
           if (state.lastUpdated != null)
@@ -152,6 +163,8 @@ class MainScreen extends ConsumerWidget {
             child: _buildAddButton(context),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
