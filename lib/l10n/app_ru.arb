@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "appTitle": "CurrencyPro",
+  "appTitle": "Conversor",
   "updateRates": "Обновление курсов...",
   "addCurrencies": "Добавьте валюты для конвертации",
   "addCurrency": "Добавить валюту",

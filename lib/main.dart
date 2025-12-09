@@ -10,7 +10,7 @@ import 'utils/app_logger.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  AppLogger.i('🚀 [APP] Запуск приложения CurrencyPro...');
+  AppLogger.i('🚀 [APP] Запуск приложения Conversor...');
   
   // Инициализация Hive
   await HiveService.init();
@@ -19,18 +19,18 @@ void main() async {
   
   runApp(
     const ProviderScope(
-      child: CurrencyProApp(),
+      child: ConversorApp(),
     ),
   );
 }
 
-class CurrencyProApp extends StatelessWidget {
-  const CurrencyProApp({super.key});
+class ConversorApp extends StatelessWidget {
+  const ConversorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CurrencyPro',
+      title: 'Conversor',
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [

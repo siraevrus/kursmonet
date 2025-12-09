@@ -73,19 +73,32 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
       amount: savedAmount,
     );
 
-    // Загружаем курсы из кэша
+    // Загружаем курсы из кэша ПЕРВЫМ ДЕЛОМ
     final cachedRatesJson = HiveService.getRatesJson();
     final cachedLastUpdated = HiveService.getLastUpdated();
     final isFirstLaunch = cachedRatesJson == null;
 
     if (cachedRatesJson != null) {
-      final cachedRates = CurrencyApiService.parseRates(cachedRatesJson);
-      AppLogger.i('💾 [INIT] Загружены курсы из кэша: ${cachedRates.length} валют');
-      AppLogger.d('   Время последнего обновления: $cachedLastUpdated');
-      state = state.copyWith(
-        rates: cachedRates,
-        lastUpdated: cachedLastUpdated,
-      );
+      try {
+        final cachedRates = CurrencyApiService.parseRates(cachedRatesJson);
+        if (cachedRates.isNotEmpty) {
+          AppLogger.i('💾 [INIT] Загружены курсы из кэша: ${cachedRates.length} валют');
+          AppLogger.d('   Время последнего обновления: $cachedLastUpdated');
+          AppLogger.d('   Примеры валют в кэше: ${cachedRates.keys.take(5).join(', ')}');
+          
+          state = state.copyWith(
+            rates: cachedRates,
+            lastUpdated: cachedLastUpdated,
+            isLoading: false, // Убеждаемся, что загрузка завершена
+          );
+        } else {
+          AppLogger.w('⚠️ [INIT] Кэш курсов пуст после парсинга');
+          state = state.copyWith(isLoading: true);
+        }
+      } catch (e) {
+        AppLogger.e('❌ [INIT] Ошибка при парсинге кэша курсов: $e');
+        state = state.copyWith(isLoading: true);
+      }
     } else {
       AppLogger.w('⚠️ [INIT] Кэш курсов пуст - первый запуск приложения');
       // При первом запуске устанавливаем состояние загрузки
@@ -96,24 +109,27 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
     AppLogger.i('🔄 [INIT] Проверка курсов валют при запуске приложения...');
     
     if (isFirstLaunch) {
-      AppLogger.i('   🆕 Первый запуск - обязательная загрузка курсов из сети');
-      // При первом запуске обязательно загружаем курсы
+      AppLogger.i('   🆕 Первый запуск - попытка загрузки курсов из сети');
+      // При первом запуске пытаемся загрузить курсы, но если нет интернета - это нормально
       await refreshRates();
+      // После refreshRates курсы будут либо из сети, либо из кэша (если был создан), либо пустые
     } else if (cachedLastUpdated != null) {
       final timeSinceUpdate = DateTime.now().difference(cachedLastUpdated);
       final minutesSinceUpdate = timeSinceUpdate.inMinutes;
       AppLogger.d('   Время с последнего обновления: $minutesSinceUpdate минут');
       
-      // Если прошло больше 5 минут, обновляем курсы
+      // Если прошло больше 5 минут, пытаемся обновить курсы
       if (minutesSinceUpdate >= 5) {
-        AppLogger.i('   ⏰ Прошло $minutesSinceUpdate минут, обновляем курсы...');
+        AppLogger.i('   ⏰ Прошло $minutesSinceUpdate минут, пытаемся обновить курсы...');
         await refreshRates();
+        // refreshRates загрузит из кэша, если нет интернета
       } else {
         AppLogger.d('   ✅ Курсы актуальны (обновлены $minutesSinceUpdate минут назад), пропускаем обновление');
+        // Курсы уже загружены из кэша выше, ничего не делаем
       }
     } else {
-      // Если кэша нет, но это не первый запуск (странная ситуация), все равно загружаем
-      AppLogger.w('   ⚠️ Кэш отсутствует, но это не первый запуск. Загружаем курсы...');
+      // Если кэша нет, но это не первый запуск (странная ситуация), пытаемся загрузить
+      AppLogger.w('   ⚠️ Кэш отсутствует, но это не первый запуск. Пытаемся загрузить курсы...');
       await refreshRates();
     }
     
@@ -122,6 +138,11 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
 
   Future<void> refreshRates() async {
     AppLogger.i('🔄 [RATES_REFRESH] Начало обновления курсов валют...');
+    
+    // Сохраняем текущие курсы на случай ошибки сети
+    final currentRates = state.rates;
+    final currentLastUpdated = state.lastUpdated;
+    
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -146,10 +167,81 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
       }
     } catch (e) {
       AppLogger.e('❌ [RATES_REFRESH] Ошибка при обновлении курсов: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      AppLogger.i('📡 [RATES_REFRESH] Пытаемся загрузить курсы из кэша для офлайн режима...');
+      
+      // При ошибке сети загружаем курсы из кэша для офлайн режима
+      final cachedRatesJson = HiveService.getRatesJson();
+      final cachedLastUpdated = HiveService.getLastUpdated();
+      
+      if (cachedRatesJson != null) {
+        try {
+          final cachedRates = CurrencyApiService.parseRates(cachedRatesJson);
+          if (cachedRates.isNotEmpty) {
+            AppLogger.i('✅ [RATES_REFRESH] Загружены курсы из кэша для офлайн режима: ${cachedRates.length} валют');
+            AppLogger.d('   Время последнего обновления кэша: $cachedLastUpdated');
+            
+            state = state.copyWith(
+              rates: cachedRates,
+              lastUpdated: cachedLastUpdated,
+              isLoading: false,
+              error: null, // Не показываем ошибку, если есть кэш
+            );
+            AppLogger.i('✅ [RATES_REFRESH] Офлайн режим активирован, используются сохраненные курсы');
+          } else {
+            AppLogger.w('⚠️ [RATES_REFRESH] Кэш курсов пуст после парсинга');
+            // Используем текущие курсы, если они есть
+            if (currentRates.isNotEmpty) {
+              AppLogger.i('✅ [RATES_REFRESH] Используем текущие курсы из state: ${currentRates.length} валют');
+              state = state.copyWith(
+                rates: currentRates,
+                lastUpdated: currentLastUpdated,
+                isLoading: false,
+                error: null,
+              );
+            } else {
+              state = state.copyWith(
+                isLoading: false,
+                error: e.toString(),
+              );
+            }
+          }
+        } catch (parseError) {
+          AppLogger.e('❌ [RATES_REFRESH] Ошибка при парсинге кэша: $parseError');
+          // Используем текущие курсы, если они есть
+          if (currentRates.isNotEmpty) {
+            AppLogger.i('✅ [RATES_REFRESH] Используем текущие курсы из state: ${currentRates.length} валют');
+            state = state.copyWith(
+              rates: currentRates,
+              lastUpdated: currentLastUpdated,
+              isLoading: false,
+              error: null,
+            );
+          } else {
+            state = state.copyWith(
+              isLoading: false,
+              error: e.toString(),
+            );
+          }
+        }
+      } else {
+        AppLogger.w('⚠️ [RATES_REFRESH] Кэш курсов отсутствует');
+        // Используем текущие курсы, если они есть
+        if (currentRates.isNotEmpty) {
+          AppLogger.i('✅ [RATES_REFRESH] Используем текущие курсы из state: ${currentRates.length} валют');
+          state = state.copyWith(
+            rates: currentRates,
+            lastUpdated: currentLastUpdated,
+            isLoading: false,
+            error: null,
+          );
+        } else {
+          AppLogger.w('⚠️ [RATES_REFRESH] Офлайн режим недоступен - нет кэша и текущих курсов');
+          state = state.copyWith(
+            isLoading: false,
+            error: e.toString(),
+          );
+        }
+      }
     }
   }
 

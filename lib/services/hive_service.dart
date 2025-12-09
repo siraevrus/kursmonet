@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../utils/app_logger.dart';
 
@@ -64,28 +65,91 @@ class HiveService {
   static Box get ratesCache => Hive.box(ratesCacheBox);
   
   static Map<String, dynamic>? getRatesJson() {
-    final ratesJson = ratesCache.get(ratesJsonKey) as Map<String, dynamic>?;
-    if (ratesJson != null) {
-      final ratesCount = (ratesJson['rates'] as Map<String, dynamic>?)?.length ?? 0;
-      AppLogger.d('💾 [HIVE] Загружен кэш курсов: $ratesCount валют');
-    } else {
-      AppLogger.d('💾 [HIVE] Кэш курсов пуст');
+    try {
+      final cachedData = ratesCache.get(ratesJsonKey);
+      if (cachedData == null) {
+        AppLogger.d('💾 [HIVE] Кэш курсов пуст');
+        return null;
+      }
+      
+      Map<String, dynamic>? ratesJson;
+      
+      // Обрабатываем разные форматы данных
+      if (cachedData is String) {
+        // Данные сохранены как JSON строка
+        AppLogger.d('💾 [HIVE] Данные в формате JSON строки');
+        ratesJson = jsonDecode(cachedData) as Map<String, dynamic>?;
+      } else if (cachedData is Map) {
+        // Данные в формате Map (старый формат)
+        AppLogger.d('💾 [HIVE] Данные в формате Map');
+        ratesJson = Map<String, dynamic>.from(cachedData);
+      } else {
+        AppLogger.e('❌ [HIVE] Неверный тип данных в кэше: ${cachedData.runtimeType}');
+        return null;
+      }
+      
+      if (ratesJson != null) {
+        final ratesCount = (ratesJson['rates'] as Map<String, dynamic>?)?.length ?? 0;
+        AppLogger.d('💾 [HIVE] Загружен кэш курсов: $ratesCount валют');
+        AppLogger.d('   Тип исходных данных: ${cachedData.runtimeType}');
+        return ratesJson;
+      } else {
+        AppLogger.e('❌ [HIVE] Не удалось распарсить данные из кэша');
+        return null;
+      }
+    } catch (e) {
+      AppLogger.e('❌ [HIVE] Ошибка при загрузке кэша курсов: $e');
+      return null;
     }
-    return ratesJson;
   }
 
   static Future<void> saveRatesJson(Map<String, dynamic> ratesJson) async {
-    final ratesCount = (ratesJson['rates'] as Map<String, dynamic>?)?.length ?? 0;
-    AppLogger.d('💾 [HIVE] Сохранение кэша курсов: $ratesCount валют');
-    await ratesCache.put(ratesJsonKey, ratesJson);
-    AppLogger.d('✅ [HIVE] Кэш курсов сохранен');
+    try {
+      final ratesCount = (ratesJson['rates'] as Map<String, dynamic>?)?.length ?? 0;
+      AppLogger.d('💾 [HIVE] Сохранение кэша курсов: $ratesCount валют');
+      
+      // Сохраняем как JSON строку для надежности
+      final jsonString = jsonEncode(ratesJson);
+      await ratesCache.put(ratesJsonKey, jsonString);
+      
+      AppLogger.d('✅ [HIVE] Кэш курсов сохранен (размер JSON: ${jsonString.length} символов)');
+      
+      // Проверяем, что данные сохранились
+      final saved = ratesCache.get(ratesJsonKey);
+      if (saved != null) {
+        AppLogger.d('✅ [HIVE] Проверка сохранения: данные в кэше присутствуют');
+      } else {
+        AppLogger.e('❌ [HIVE] Ошибка: данные не сохранились в кэш');
+      }
+    } catch (e) {
+      AppLogger.e('❌ [HIVE] Ошибка при сохранении кэша курсов: $e');
+      rethrow;
+    }
   }
 
   static DateTime? getLastUpdated() {
-    final timestamp = ratesCache.get(lastUpdatedKey);
-    final dateTime = timestamp != null ? DateTime.parse(timestamp.toString()) : null;
-    AppLogger.d('💾 [HIVE] Загружено время обновления: $dateTime');
-    return dateTime;
+    try {
+      final timestamp = ratesCache.get(lastUpdatedKey);
+      if (timestamp == null) {
+        AppLogger.d('💾 [HIVE] Время обновления не найдено');
+        return null;
+      }
+      
+      DateTime? dateTime;
+      if (timestamp is String) {
+        dateTime = DateTime.tryParse(timestamp);
+      } else if (timestamp is DateTime) {
+        dateTime = timestamp;
+      } else {
+        dateTime = DateTime.tryParse(timestamp.toString());
+      }
+      
+      AppLogger.d('💾 [HIVE] Загружено время обновления: $dateTime');
+      return dateTime;
+    } catch (e) {
+      AppLogger.e('❌ [HIVE] Ошибка при загрузке времени обновления: $e');
+      return null;
+    }
   }
 
   static Future<void> saveLastUpdated(DateTime dateTime) async {
