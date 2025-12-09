@@ -6,12 +6,68 @@ import '../providers/currency_provider.dart';
 import '../widgets/currency_card.dart';
 import '../widgets/add_currency_sheet.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_logger.dart';
 
-class MainScreen extends ConsumerWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Проверяем курсы при первом появлении экрана
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndRefreshRates();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      AppLogger.i('📱 [LIFECYCLE] Приложение вернулось из фона');
+      _checkAndRefreshRates();
+    }
+  }
+
+  void _checkAndRefreshRates() {
+    final currentState = ref.read(currencyProvider);
+    final lastUpdated = currentState.lastUpdated;
+    
+    if (lastUpdated == null) {
+      // Если курсов нет, загружаем обязательно
+      AppLogger.i('🔄 [LIFECYCLE] Курсы отсутствуют, загружаем...');
+      ref.read(currencyProvider.notifier).refreshRates();
+      return;
+    }
+    
+    // Проверяем, прошло ли больше 5 минут с последнего обновления
+    final timeSinceUpdate = DateTime.now().difference(lastUpdated);
+    final minutesSinceUpdate = timeSinceUpdate.inMinutes;
+    
+    AppLogger.d('⏰ [LIFECYCLE] Время с последнего обновления: $minutesSinceUpdate минут');
+    
+    if (minutesSinceUpdate >= 5) {
+      AppLogger.i('🔄 [LIFECYCLE] Прошло $minutesSinceUpdate минут, обновляем курсы...');
+      ref.read(currencyProvider.notifier).refreshRates();
+    } else {
+      AppLogger.d('✅ [LIFECYCLE] Курсы актуальны (обновлены $minutesSinceUpdate минут назад)');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(currencyProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -110,50 +166,59 @@ class MainScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                      // Список валют
+                      // Список валют с поддержкой swipe-to-refresh
                       Expanded(
-                        child: ReorderableListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: state.selectedCurrencies.length,
-                          onReorder: (oldIndex, newIndex) {
-                            ref.read(currencyProvider.notifier).reorderCurrencies(oldIndex, newIndex);
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            AppLogger.i('🔄 [SWIPE_REFRESH] Пользователь выполнил swipe-to-refresh');
+                            await ref.read(currencyProvider.notifier).refreshRates();
                           },
-                          itemBuilder: (context, index) {
-                            final currencyCode = state.selectedCurrencies[index];
-                            final isBase = currencyCode == state.baseCurrency;
+                          color: AppTheme.accentPrimary,
+                          backgroundColor: AppTheme.backgroundCard,
+                          child: ReorderableListView.builder(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: state.selectedCurrencies.length,
+                            onReorder: (oldIndex, newIndex) {
+                              ref.read(currencyProvider.notifier).reorderCurrencies(oldIndex, newIndex);
+                            },
+                            itemBuilder: (context, index) {
+                              final currencyCode = state.selectedCurrencies[index];
+                              final isBase = currencyCode == state.baseCurrency;
 
-                            return Dismissible(
-                              key: Key(currencyCode),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                padding: const EdgeInsets.only(right: 20),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.deleteButton,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                alignment: Alignment.centerRight,
-                                child: const Icon(
-                                  Icons.delete,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                              onDismissed: (direction) {
-                                ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.currencyRemoved(currencyCode)),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                              child: CurrencyCard(
+                              return Dismissible(
                                 key: Key(currencyCode),
-                                currencyCode: currencyCode,
-                                isBaseCurrency: isBase,
-                              ),
-                            );
-                          },
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.only(right: 20),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.deleteButton,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                                onDismissed: (direction) {
+                                  ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.currencyRemoved(currencyCode)),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: CurrencyCard(
+                                  key: Key(currencyCode),
+                                  currencyCode: currencyCode,
+                                  isBaseCurrency: isBase,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
