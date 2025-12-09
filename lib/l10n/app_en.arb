@@ -1,0 +1,68 @@
+{
+  "@@locale": "en",
+  "appTitle": "CurrencyPro",
+  "updateRates": "Updating rates...",
+  "addCurrencies": "Add currencies for conversion",
+  "addCurrency": "Add Currency",
+  "currencyRemoved": "{currencyCode} removed",
+  "@currencyRemoved": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyAdded": "{currencyCode} added",
+  "@currencyAdded": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "updated": "Updated: {time}",
+  "@updated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Just now",
+  "minutesAgo": "{count} min ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rateUnavailable": "Rate unavailable",
+  "exchangeRate": "1 {baseCurrency} = {rate} {targetCurrency}",
+  "@exchangeRate": {
+    "placeholders": {
+      "baseCurrency": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "targetCurrency": {
+        "type": "String"
+      }
+    }
+  },
+  "searchCurrency": "Search currency...",
+  "popular": "Popular",
+  "allCurrencies": "All Currencies",
+  "offlineMode": "Offline mode. Using saved data."
+}
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:currency_pro/l10n/app_localizations.dart';
 import '../providers/currency_provider.dart';
 import '../models/currency_info.dart';
 import '../theme/app_theme.dart';
@@ -155,7 +156,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _getExchangeRateText(state, widget.currencyCode),
+                    _getExchangeRateText(context, state, widget.currencyCode),
                     style: const TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 12,
@@ -209,10 +210,12 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
     );
   }
 
-  String _getExchangeRateText(CurrencyState state, String currencyCode) {
+  String _getExchangeRateText(BuildContext context, CurrencyState state, String currencyCode) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (state.rates.isEmpty || !state.rates.containsKey(state.baseCurrency) || 
         !state.rates.containsKey(currencyCode)) {
-      return 'Курс недоступен';
+      return l10n.rateUnavailable;
     }
 
     final baseRate = state.rates[state.baseCurrency] ?? 1.0;
@@ -224,7 +227,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
       decimalDigits: 4,
     );
 
-    return '1 ${state.baseCurrency} = ${formatter.format(rate)} $currencyCode';
+    return l10n.exchangeRate(state.baseCurrency, formatter.format(rate), currencyCode);
   }
 }
 

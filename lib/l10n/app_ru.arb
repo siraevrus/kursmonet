@@ -1,0 +1,68 @@
+{
+  "@@locale": "ru",
+  "appTitle": "CurrencyPro",
+  "updateRates": "Обновление курсов...",
+  "addCurrencies": "Добавьте валюты для конвертации",
+  "addCurrency": "Добавить валюту",
+  "currencyRemoved": "{currencyCode} удалена",
+  "@currencyRemoved": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyAdded": "{currencyCode} добавлена",
+  "@currencyAdded": {
+    "placeholders": {
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "updated": "Обновлено: {time}",
+  "@updated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Только что",
+  "minutesAgo": "{count} мин назад",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} ч назад",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rateUnavailable": "Курс недоступен",
+  "exchangeRate": "1 {baseCurrency} = {rate} {targetCurrency}",
+  "@exchangeRate": {
+    "placeholders": {
+      "baseCurrency": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "targetCurrency": {
+        "type": "String"
+      }
+    }
+  },
+  "searchCurrency": "Поиск валюты...",
+  "popular": "Популярные",
+  "allCurrencies": "Все валюты",
+  "offlineMode": "Режим оффлайн. Используются сохраненные данные."
+}
+

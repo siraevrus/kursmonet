@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:currency_pro/l10n/app_localizations.dart';
 import '../providers/currency_provider.dart';
 import '../models/currency_info.dart';
 import '../theme/app_theme.dart';
@@ -24,6 +25,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(currencyProvider);
     final allCurrencies = CurrencyInfo.allCurrencies;
     final popularCurrencies = CurrencyInfo.popularCurrencies;
@@ -73,7 +75,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
                     controller: _searchController,
                     style: const TextStyle(color: AppTheme.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Поиск валюты...',
+                      hintText: l10n.searchCurrency,
                       hintStyle: const TextStyle(color: AppTheme.textSecondary),
                       prefixIcon: const Icon(
                         Icons.search,
@@ -107,10 +109,10 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   if (popularFiltered.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        'Популярные',
+                        l10n.popular,
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
@@ -127,10 +129,10 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
                     const SizedBox(height: 16),
                   ],
                   if (otherFiltered.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        'Все валюты',
+                        l10n.allCurrencies,
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
@@ -160,6 +162,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
     CurrencyInfo info,
     bool isSelected,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: () {
         if (isSelected) {
@@ -168,7 +171,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
             ref.read(currencyProvider.notifier).removeCurrency(code);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('$code удалена'),
+                content: Text(l10n.currencyRemoved(code)),
                 duration: const Duration(seconds: 1),
               ),
             );
@@ -179,7 +182,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$code добавлена'),
+              content: Text(l10n.currencyAdded(code)),
               duration: const Duration(seconds: 1),
             ),
           );

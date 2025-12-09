@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:currency_pro/l10n/app_localizations.dart';
 import '../providers/currency_provider.dart';
 import '../widgets/currency_card.dart';
 import '../widgets/add_currency_sheet.dart';
@@ -12,6 +13,7 @@ class MainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(currencyProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Container(
@@ -26,14 +28,14 @@ class MainScreen extends ConsumerWidget {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
-        title: const Text('CurrencyPro'),
+        title: Text(l10n.appTitle),
         actions: [
           if (state.lastUpdated != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Center(
                 child: Text(
-                  _formatLastUpdated(state.lastUpdated!),
+                  _formatLastUpdated(context, state.lastUpdated!),
                   style: const TextStyle(
                     color: AppTheme.textSecondary,
                     fontSize: 12,
@@ -57,9 +59,9 @@ class MainScreen extends ConsumerWidget {
                 : () {
                     ref.read(currencyProvider.notifier).refreshRates();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Обновление курсов...'),
-                        duration: Duration(seconds: 1),
+                      SnackBar(
+                        content: Text(l10n.updateRates),
+                        duration: const Duration(seconds: 1),
                       ),
                     );
                   },
@@ -74,9 +76,9 @@ class MainScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Добавьте валюты для конвертации',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                        Text(
+                          l10n.addCurrencies,
+                          style: const TextStyle(color: AppTheme.textSecondary),
                         ),
                         const SizedBox(height: 24),
                         _buildAddButton(context),
@@ -98,7 +100,7 @@ class MainScreen extends ConsumerWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'Обновлено: ${_formatLastUpdated(state.lastUpdated!)}',
+                                l10n.updated(_formatLastUpdated(context, state.lastUpdated!)),
                                 style: const TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 12,
@@ -140,7 +142,7 @@ class MainScreen extends ConsumerWidget {
                                 ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('$currencyCode удалена'),
+                                    content: Text(l10n.currencyRemoved(currencyCode)),
                                     duration: const Duration(seconds: 2),
                                   ),
                                 );
@@ -170,6 +172,7 @@ class MainScreen extends ConsumerWidget {
   }
 
   Widget _buildAddButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
         showModalBottomSheet(
@@ -203,7 +206,7 @@ class MainScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Добавить валюту',
+              l10n.addCurrency,
               style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 16,
@@ -216,16 +219,17 @@ class MainScreen extends ConsumerWidget {
     );
   }
 
-  String _formatLastUpdated(DateTime dateTime) {
+  String _formatLastUpdated(BuildContext context, DateTime dateTime) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Только что';
+      return l10n.justNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes} мин назад';
+      return l10n.minutesAgo(difference.inMinutes);
     } else if (difference.inDays < 1) {
-      return '${difference.inHours} ч назад';
+      return l10n.hoursAgo(difference.inHours);
     } else {
       return DateFormat('dd.MM.yyyy HH:mm').format(dateTime);
     }
