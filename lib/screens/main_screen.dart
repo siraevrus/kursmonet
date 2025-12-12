@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:currency_pro/l10n/app_localizations.dart';
@@ -179,8 +180,26 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             physics: const AlwaysScrollableScrollPhysics(),
                             itemCount: state.selectedCurrencies.length,
+                            onReorderStart: (index) {
+                              AppLogger.i('🔄 [REORDER] Начало перетаскивания валюты с индексом $index');
+                              // Микровибрация при начале перетаскивания
+                              HapticFeedback.selectionClick();
+                            },
                             onReorder: (oldIndex, newIndex) {
+                              AppLogger.i('🔄 [REORDER] Перемещение валюты: $oldIndex → $newIndex');
                               ref.read(currencyProvider.notifier).reorderCurrencies(oldIndex, newIndex);
+                              // Вибрация при завершении перетаскивания
+                              HapticFeedback.lightImpact();
+                            },
+                            proxyDecorator: (child, index, animation) {
+                              // Кастомизация подложки при перетаскивании
+                              return Material(
+                                elevation: 6,
+                                shadowColor: AppTheme.accentPrimary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                color: AppTheme.backgroundCard,
+                                child: child,
+                              );
                             },
                             itemBuilder: (context, index) {
                               final currencyCode = state.selectedCurrencies[index];
@@ -215,6 +234,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                                   key: Key(currencyCode),
                                   currencyCode: currencyCode,
                                   isBaseCurrency: isBase,
+                                  index: index,
                                 ),
                               );
                             },

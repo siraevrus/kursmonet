@@ -12,11 +12,13 @@ import '../utils/app_logger.dart';
 class CurrencyCard extends ConsumerStatefulWidget {
   final String currencyCode;
   final bool isBaseCurrency;
+  final int index;
 
   const CurrencyCard({
     super.key,
     required this.currencyCode,
     required this.isBaseCurrency,
+    required this.index,
   });
 
   @override
@@ -185,7 +187,10 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
       onTap: () {
         _focusNode.requestFocus();
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -198,6 +203,18 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
         ),
         child: Row(
           children: [
+            // Иконка перетаскивания с ReorderableDragStartListener (только эта область активирует перетаскивание)
+            ReorderableDragStartListener(
+              index: widget.index,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Icon(
+                  Icons.drag_handle,
+                  color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                  size: 20,
+                ),
+              ),
+            ),
             // Флаг
             ClipOval(
               child: CachedNetworkImage(
@@ -350,6 +367,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

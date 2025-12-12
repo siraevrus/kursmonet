@@ -14,3 +14,5 @@ echo ""
 # Показываем логи Flutter с нашими метками
 adb logcat | grep -E "flutter|CURRENCY|CONVERSION|FOCUS|UPDATE|RATES|HIVE|API|AMOUNT|INIT|RECALC|APP|CURRENCY_MANAGEMENT" --color=always
 
+
+

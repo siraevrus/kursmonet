@@ -207,3 +207,5 @@ adb logcat | grep -E "flutter|CurrencyPro"
 - **w (warning)** - Предупреждения
 - **e (error)** - Ошибки
 
+
+
