@@ -251,6 +251,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     widget.currencyCode,
@@ -262,15 +263,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    _getExchangeRateText(context, state, widget.currencyCode),
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
+                  _buildExchangeRateText(context, state, widget.currencyCode),
                 ],
               ),
             ),
@@ -340,7 +333,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
                 ],
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Inter',
                 ),
@@ -350,7 +343,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
                     currencyInfo.symbol,
                     style: TextStyle(
                       color: AppTheme.textPrimary.withValues(alpha: 0.5),
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -373,12 +366,20 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
     );
   }
 
-  String _getExchangeRateText(BuildContext context, CurrencyState state, String currencyCode) {
+  Widget _buildExchangeRateText(BuildContext context, CurrencyState state, String currencyCode) {
     final l10n = AppLocalizations.of(context)!;
     
     if (state.rates.isEmpty || !state.rates.containsKey(state.baseCurrency) || 
         !state.rates.containsKey(currencyCode)) {
-      return l10n.rateUnavailable;
+      return Text(
+        l10n.rateUnavailable,
+        style: const TextStyle(
+          color: AppTheme.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+          fontFamily: 'Inter',
+        ),
+      );
     }
 
     final baseRate = state.rates[state.baseCurrency] ?? 1.0;
@@ -390,7 +391,31 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
       decimalDigits: 4,
     );
 
-    return l10n.exchangeRate(state.baseCurrency, formatter.format(rate), currencyCode);
+    final formattedRate = formatter.format(rate);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '1 ${state.baseCurrency} /',
+          style: const TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'Inter',
+          ),
+        ),
+        Text(
+          '$formattedRate ${currencyCode}',
+          style: const TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ],
+    );
   }
 }
 

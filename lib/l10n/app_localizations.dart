@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @exchangeRate.
   ///
   /// In ru, this message translates to:
-  /// **'1 {baseCurrency} = {rate} {targetCurrency}'**
+  /// **'1 {baseCurrency} / {rate} {targetCurrency}'**
   String exchangeRate(String baseCurrency, String rate, String targetCurrency);
 
   /// No description provided for @searchCurrency.

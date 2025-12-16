@@ -22,6 +22,10 @@ dependencies:
   # HTTP запросы
   http: ^1.1.0
   
+  # Информация об устройстве
+  device_info_plus: ^10.1.0
+  package_info_plus: ^8.0.0
+  
   # Кэширование изображений
   cached_network_image: ^3.3.0
   

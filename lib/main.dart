@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:currency_pro/l10n/app_localizations.dart';
 import 'screens/main_screen.dart';
 import 'services/hive_service.dart';
+import 'services/device_service.dart';
+import 'services/currency_api_service.dart';
 import 'theme/app_theme.dart';
 import 'utils/app_logger.dart';
 
@@ -14,6 +16,20 @@ void main() async {
   
   // Инициализация Hive
   await HiveService.init();
+  
+  // Регистрация устройства при первом запуске
+  final isDeviceRegistered = DeviceService.isDeviceRegistered();
+  if (!isDeviceRegistered) {
+    AppLogger.i('📱 [APP] Первый запуск - регистрация устройства...');
+    try {
+      await CurrencyApiService.registerDevice();
+    } catch (e) {
+      AppLogger.w('⚠️ [APP] Не удалось зарегистрировать устройство: $e');
+      AppLogger.d('   Продолжаем работу без регистрации');
+    }
+  } else {
+    AppLogger.d('📱 [APP] Устройство уже зарегистрировано');
+  }
   
   AppLogger.i('✅ [APP] Приложение готово к запуску');
   

@@ -16,3 +16,5 @@ adb logcat | grep -E "flutter|CURRENCY|CONVERSION|FOCUS|UPDATE|RATES|HIVE|API|AM
 
 
 
+
+

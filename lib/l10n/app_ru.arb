@@ -46,7 +46,7 @@
     }
   },
   "rateUnavailable": "Курс недоступен",
-  "exchangeRate": "1 {baseCurrency} = {rate} {targetCurrency}",
+  "exchangeRate": "1 {baseCurrency} / {rate} {targetCurrency}",
   "@exchangeRate": {
     "placeholders": {
       "baseCurrency": {

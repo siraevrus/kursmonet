@@ -46,7 +46,7 @@
     }
   },
   "rateUnavailable": "Rate unavailable",
-  "exchangeRate": "1 {baseCurrency} = {rate} {targetCurrency}",
+  "exchangeRate": "1 {baseCurrency} / {rate} {targetCurrency}",
   "@exchangeRate": {
     "placeholders": {
       "baseCurrency": {

@@ -53,7 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String exchangeRate(String baseCurrency, String rate, String targetCurrency) {
-    return '1 $baseCurrency = $rate $targetCurrency';
+    return '1 $baseCurrency / $rate $targetCurrency';
   }
 
   @override
