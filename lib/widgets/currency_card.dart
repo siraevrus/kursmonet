@@ -248,7 +248,8 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
             const SizedBox(width: 16),
             
             // Информация о валюте
-            Expanded(
+            Flexible(
+              flex: 2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -269,7 +270,8 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
             ),
             
             // Поле ввода
-            Expanded(
+            Flexible(
+              flex: 3,
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,

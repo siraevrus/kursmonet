@@ -163,7 +163,7 @@ class _AddCurrencySheetState extends ConsumerState<AddCurrencySheet> {
     bool isSelected,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         if (isSelected) {
           // Можно удалить валюту
