@@ -87,19 +87,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
             backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
         title: Text(l10n.appTitle),
         actions: [
-          if (state.lastUpdated != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(
-                child: Text(
-                  _formatLastUpdated(context, state.lastUpdated!),
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
           IconButton(
             icon: state.isLoading
                 ? const SizedBox(

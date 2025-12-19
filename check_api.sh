@@ -65,3 +65,4 @@ echo "   Ищите в логах:"
 echo "   📡 [API] Запрос курсов валют: https://conversor.onza.me/api/rates"
 echo ""
 
+
