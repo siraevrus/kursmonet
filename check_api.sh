@@ -66,3 +66,4 @@ echo "   📡 [API] Запрос курсов валют: https://conversor.onza
 echo ""
 
 
+

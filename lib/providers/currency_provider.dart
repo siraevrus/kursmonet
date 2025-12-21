@@ -146,8 +146,14 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      AppLogger.d('📡 [RATES_REFRESH] Запрос к API...');
-      final ratesJson = await CurrencyApiService.fetchRates();
+      AppLogger.d('📡 [RATES_REFRESH] Запрос к API с таймаутом 5 секунд...');
+      final ratesJson = await CurrencyApiService.fetchRates().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          AppLogger.w('⏱️ [RATES_REFRESH] Таймаут запроса (5 секунд)');
+          return null;
+        },
+      );
       if (ratesJson != null) {
         final rates = CurrencyApiService.parseRates(ratesJson);
         AppLogger.i('✅ [RATES_REFRESH] Курсы получены: ${rates.length} валют');
@@ -164,6 +170,65 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
           isLoading: false,
         );
         AppLogger.i('✅ [RATES_REFRESH] Курсы обновлены успешно. Будет пересчет всех валют...');
+      } else {
+        // Таймаут - загружаем из кэша или используем текущие курсы
+        AppLogger.w('⏱️ [RATES_REFRESH] Таймаут запроса, загружаем данные из кэша...');
+        final cachedRatesJson = HiveService.getRatesJson();
+        final cachedLastUpdated = HiveService.getLastUpdated();
+        
+        if (cachedRatesJson != null) {
+          try {
+            final cachedRates = CurrencyApiService.parseRates(cachedRatesJson);
+            if (cachedRates.isNotEmpty) {
+              AppLogger.i('✅ [RATES_REFRESH] Загружены курсы из кэша после таймаута: ${cachedRates.length} валют');
+              state = state.copyWith(
+                rates: cachedRates,
+                lastUpdated: cachedLastUpdated,
+                isLoading: false,
+                error: null,
+              );
+            } else {
+              // Используем текущие курсы, если они есть
+              if (currentRates.isNotEmpty) {
+                AppLogger.i('✅ [RATES_REFRESH] Используем текущие курсы после таймаута: ${currentRates.length} валют');
+                state = state.copyWith(
+                  rates: currentRates,
+                  lastUpdated: currentLastUpdated,
+                  isLoading: false,
+                  error: null,
+                );
+              } else {
+                state = state.copyWith(isLoading: false);
+              }
+            }
+          } catch (parseError) {
+            AppLogger.e('❌ [RATES_REFRESH] Ошибка при парсинге кэша после таймаута: $parseError');
+            // Используем текущие курсы, если они есть
+            if (currentRates.isNotEmpty) {
+              state = state.copyWith(
+                rates: currentRates,
+                lastUpdated: currentLastUpdated,
+                isLoading: false,
+                error: null,
+              );
+            } else {
+              state = state.copyWith(isLoading: false);
+            }
+          }
+        } else {
+          // Нет кэша - используем текущие курсы или останавливаем лоадер
+          if (currentRates.isNotEmpty) {
+            AppLogger.i('✅ [RATES_REFRESH] Используем текущие курсы после таймаута: ${currentRates.length} валют');
+            state = state.copyWith(
+              rates: currentRates,
+              lastUpdated: currentLastUpdated,
+              isLoading: false,
+              error: null,
+            );
+          } else {
+            state = state.copyWith(isLoading: false);
+          }
+        }
       }
     } catch (e) {
       AppLogger.e('❌ [RATES_REFRESH] Ошибка при обновлении курсов: $e');
