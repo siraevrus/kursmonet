@@ -406,19 +406,29 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
   void removeCurrency(String currency) {
     if (state.selectedCurrencies.length > 1) {
       AppLogger.i('➖ [CURRENCY_MANAGEMENT] Удаление валюты: $currency');
-      AppLogger.d('   Текущий список: ${state.selectedCurrencies.join(', ')}');
       final newList = state.selectedCurrencies.where((c) => c != currency).toList();
-      state = state.copyWith(selectedCurrencies: newList);
-      HiveService.saveSelectedCurrencies(newList);
       
-      // Если удалили базовую валюту, устанавливаем первую из списка
+      // Если удалили базовую валюту, готовим новую базу
+      String newBase = state.baseCurrency;
+      double newAmount = state.amount;
+      
       if (state.baseCurrency == currency) {
-        AppLogger.w('⚠️ [CURRENCY_MANAGEMENT] Удалена базовая валюта, переключаем на: ${newList.first}');
-        setBaseCurrency(newList.first);
+        newBase = newList.first;
+        newAmount = 0.0;
+        AppLogger.w('⚠️ [CURRENCY_MANAGEMENT] Удалена базовая валюта, переключаем на: $newBase');
+        HiveService.saveLastBaseCurrency(newBase);
+        HiveService.saveLastAmount(newAmount);
       }
-      AppLogger.i('✅ [CURRENCY_MANAGEMENT] Валюта удалена. Новый список: ${newList.join(', ')}');
-    } else {
-      AppLogger.w('⚠️ [CURRENCY_MANAGEMENT] Нельзя удалить последнюю валюту');
+
+      // Обновляем состояние ОДНИМ вызовом copyWith
+      state = state.copyWith(
+        selectedCurrencies: newList,
+        baseCurrency: newBase,
+        amount: newAmount,
+      );
+      
+      HiveService.saveSelectedCurrencies(newList);
+      AppLogger.i('✅ [CURRENCY_MANAGEMENT] Валюта удалена успешно');
     }
   }
 

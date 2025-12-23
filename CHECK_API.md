@@ -129,3 +129,4 @@ flutter run & sleep 5 && adb logcat -d | grep -E "conversor.onza.me|fxratesapi" 
 
 
 
+

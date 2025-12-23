@@ -17,6 +17,8 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
+  bool _isKeyboardVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -67,51 +69,81 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     }
   }
 
+  void _hideKeyboard() {
+    FocusScope.of(context).unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(currencyProvider);
     final l10n = AppLocalizations.of(context)!;
+    
+    // Отслеживаем видимость клавиатуры
+    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (keyboardVisible != _isKeyboardVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _isKeyboardVisible = keyboardVisible;
+          });
+        }
+      });
+    }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/earth.png'),
-            fit: BoxFit.cover,
-            opacity: 0.15,
+    return GestureDetector(
+      onTap: () {
+        // Скрываем клавиатуру при нажатии вне полей ввода
+        _hideKeyboard();
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/earth.png'),
+              fit: BoxFit.cover,
+              opacity: 0.15,
+            ),
           ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
-        title: Text(l10n.appTitle),
-        actions: [
-          IconButton(
-            icon: state.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textPrimary),
-                    ),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: state.isLoading
-                ? null
-                : () {
-                    ref.read(currencyProvider.notifier).refreshRates();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.updateRates),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
-          ),
-        ],
-      ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
+              title: Text(l10n.appTitle),
+              actions: [
+                // Кнопка сворачивания клавиатуры (показывается только когда клавиатура видна)
+                if (_isKeyboardVisible)
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_hide),
+                    tooltip: 'Скрыть клавиатуру',
+                    onPressed: _hideKeyboard,
+                  ),
+                IconButton(
+                  icon: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textPrimary),
+                          ),
+                        )
+                      : const Icon(Icons.refresh),
+                  onPressed: state.isLoading
+                      ? null
+                      : () {
+                          ref.read(currencyProvider.notifier).refreshRates();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.updateRates),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                ),
+              ],
+            ),
       body: Column(
         children: [
           Expanded(
@@ -193,7 +225,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                               final isBase = currencyCode == state.baseCurrency;
 
                               return Dismissible(
-                                key: Key(currencyCode),
+                                key: ValueKey('dismissible_$currencyCode'),
                                 direction: DismissDirection.endToStart,
                                 background: Container(
                                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -209,7 +241,11 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                                   ),
                                 ),
                                 onDismissed: (direction) {
+                                  // Удаляем валюту из состояния
                                   ref.read(currencyProvider.notifier).removeCurrency(currencyCode);
+                                  
+                                  // Показываем уведомление
+                                  ScaffoldMessenger.of(context).clearSnackBars();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(l10n.currencyRemoved(currencyCode)),
@@ -218,7 +254,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                                   );
                                 },
                                 child: CurrencyCard(
-                                  key: Key(currencyCode),
+                                  key: ValueKey('card_$currencyCode'),
                                   currencyCode: currencyCode,
                                   isBaseCurrency: isBase,
                                   index: index,
@@ -240,6 +276,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       ),
         ),
       ),
+      ),
     );
   }
 
@@ -247,6 +284,8 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
+        // Скрываем клавиатуру перед открытием модального окна
+        _hideKeyboard();
         showModalBottomSheet(
           context: context,
           backgroundColor: AppTheme.backgroundHeader,
@@ -257,6 +296,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
           builder: (context) => const AddCurrencySheet(),
         );
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(24),

@@ -185,14 +185,16 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
 
     return GestureDetector(
       onTap: () {
+        // Устанавливаем фокус на поле ввода при нажатии на карточку
         _focusNode.requestFocus();
       },
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16, right: 12),
         decoration: BoxDecoration(
           color: AppTheme.backgroundCard,
           borderRadius: BorderRadius.circular(16),
@@ -249,7 +251,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
             
             // Информация о валюте
             Flexible(
-              flex: 2,
+              flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +272,7 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
             ),
             
             // Поле ввода
-            Flexible(
+            Expanded(
               flex: 3,
               child: TextField(
                 controller: _controller,
@@ -338,18 +340,32 @@ class _CurrencyCardState extends ConsumerState<CurrencyCard> {
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Inter',
+                  height: 1.0,
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  suffix: Text(
-                    currencyInfo.symbol,
-                    style: TextStyle(
-                      color: AppTheme.textPrimary.withValues(alpha: 0.5),
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          currencyInfo.symbol,
+                          style: TextStyle(
+                            color: AppTheme.textPrimary.withValues(alpha: 0.5),
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  contentPadding: const EdgeInsets.only(left: 8),
+                  suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                 ),
                 onChanged: (value) {
                   if (isBase && _focusNode.hasFocus) {
