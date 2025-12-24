@@ -60,7 +60,9 @@ class CurrencyNotifier extends StateNotifier<CurrencyState> {
     final savedCurrencies = HiveService.getSelectedCurrencies();
     final savedBaseCurrency = HiveService.getLastBaseCurrency() ?? 
         (savedCurrencies.isNotEmpty ? savedCurrencies.first : 'USD');
-    final savedAmount = HiveService.getLastAmount() ?? 1.0;
+    // При первом запуске (когда валюты пустые) устанавливаем сумму в 0.0
+    final savedAmount = HiveService.getLastAmount() ?? 
+        (savedCurrencies.isEmpty ? 0.0 : 1.0);
 
     AppLogger.d('📋 [INIT] Загружены сохраненные данные:');
     AppLogger.d('   Выбранные валюты: ${savedCurrencies.join(', ')}');

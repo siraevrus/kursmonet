@@ -26,8 +26,8 @@ class HiveService {
   static Box get appSettings => Hive.box(appSettingsBox);
   
   static List<String> getSelectedCurrencies() {
-    final currencies = appSettings.get(selectedCurrenciesKey, defaultValue: ['USD', 'EUR', 'RUB', 'KZT']);
-    AppLogger.d('💾 [HIVE] Загружены выбранные валюты: ${currencies.join(', ')}');
+    final currencies = appSettings.get(selectedCurrenciesKey, defaultValue: <String>[]);
+    AppLogger.d('💾 [HIVE] Загружены выбранные валюты: ${currencies.isEmpty ? "пусто" : currencies.join(', ')}');
     return List<String>.from(currencies);
   }
 
