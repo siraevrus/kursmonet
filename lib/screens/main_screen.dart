@@ -17,8 +17,6 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
-  bool _isKeyboardVisible = false;
-
   @override
   void initState() {
     super.initState();
@@ -78,18 +76,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final state = ref.watch(currencyProvider);
     final l10n = AppLocalizations.of(context)!;
-    
-    // Отслеживаем видимость клавиатуры
-    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-    if (keyboardVisible != _isKeyboardVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _isKeyboardVisible = keyboardVisible;
-          });
-        }
-      });
-    }
 
     return GestureDetector(
       onTap: () {
@@ -98,27 +84,23 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       },
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/earth.png'),
-              fit: BoxFit.cover,
-              opacity: 0.15,
-            ),
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/earth.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.15,
+                ),
+              ),
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: AppTheme.backgroundHeader.withValues(alpha: 0.9),
               title: Text(l10n.appTitle),
               actions: [
-                // Кнопка сворачивания клавиатуры (показывается только когда клавиатура видна)
-                if (_isKeyboardVisible)
-                  IconButton(
-                    icon: const Icon(Icons.keyboard_hide),
-                    tooltip: 'Скрыть клавиатуру',
-                    onPressed: _hideKeyboard,
-                  ),
                 IconButton(
                   icon: state.isLoading
                       ? const SizedBox(
@@ -274,8 +256,10 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
           ),
         ],
       ),
+              ),
+            ),
+          ],
         ),
-      ),
       ),
     );
   }
