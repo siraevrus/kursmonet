@@ -76,6 +76,8 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final state = ref.watch(currencyProvider);
     final l10n = AppLocalizations.of(context)!;
+    // Определяем, открыта ли клавиатура
+    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return GestureDetector(
       onTap: () {
@@ -130,19 +132,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
         children: [
           Expanded(
             child: state.selectedCurrencies.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          l10n.addCurrencies,
-                          style: const TextStyle(color: AppTheme.textSecondary),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildAddButton(context),
-                      ],
-                    ),
-                  )
+                ? const SizedBox.shrink()
                 : Column(
                     children: [
                       // Время обновления над первой карточкой
@@ -249,10 +239,16 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
                     ],
                   ),
           ),
-          // Кнопка добавления всегда внизу
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildAddButton(context),
+          // Кнопка добавления скрывается при открытии клавиатуры
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: keyboardVisible
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildAddButton(context),
+                  ),
           ),
         ],
       ),
